@@ -13,12 +13,12 @@
 | Requests | 2.34.2 | Apache-2.0 | [Requests](https://github.com/psf/requests) |
 | pystray | 0.19.5 | LGPL v3 | [pystray 0.19.5](https://github.com/moses-palmer/pystray/tree/v0.19.5) |
 | darkdetect | 0.8.0 | BSD-3-Clause | [darkdetect](https://github.com/albertosottile/darkdetect) |
-| packaging | 26.3 | Apache-2.0 或 BSD-2-Clause | [packaging](https://github.com/pypa/packaging) |
+| packaging | 26.2 | Apache-2.0 或 BSD-2-Clause | [packaging](https://github.com/pypa/packaging) |
 | six | 1.17.0 | MIT | [six](https://github.com/benjaminp/six) |
-| charset-normalizer | 3.5.2 | MIT | [charset-normalizer](https://github.com/jawah/charset_normalizer) |
-| idna | 3.20 | BSD-3-Clause | [idna](https://github.com/kjd/idna) |
-| urllib3 | 2.8.0 | MIT | [urllib3](https://github.com/urllib3/urllib3) |
-| certifi | 2026.7.22 | MPL-2.0 | [certifi](https://github.com/certifi/python-certifi) |
+| charset-normalizer | 3.4.7 | MIT | [charset-normalizer](https://github.com/jawah/charset_normalizer) |
+| idna | 3.18 | BSD-3-Clause | [idna](https://github.com/kjd/idna) |
+| urllib3 | 2.7.0 | MIT | [urllib3](https://github.com/urllib3/urllib3) |
+| certifi | 2026.6.17 | MPL-2.0 | [certifi](https://github.com/certifi/python-certifi) |
 
 CustomTkinter 6.0.0 元数据的 `License` 字段与所附文件不一致；所附 `LICENSE` 完整内容是 MIT License，因此这里按原始许可证文件列示。Requests 的原始 `NOTICE` 也已随附。Pillow 的许可证涵盖其主体；编译组件的附带声明以其原始文件与上游发行资料为准。CPython 原始许可证中包括其捆绑组件的声明。
 
@@ -29,7 +29,7 @@ pystray 的 LGPL 许可证与其引用的 GPL 许可证全文分别保存在 `li
 | 组件 | 本次版本 | 许可证 | 上游源码 |
 | --- | --- | --- | --- |
 | PyInstaller | 6.22.3 | GPL-2.0-or-later，附 Bootloader Exception | [PyInstaller](https://github.com/pyinstaller/pyinstaller) |
-| pyinstaller-hooks-contrib | 2026.8 | 构建钩子 GPL-2.0-or-later；运行时钩子 Apache-2.0 | [社区钩子](https://github.com/pyinstaller/pyinstaller-hooks-contrib) |
+| pyinstaller-hooks-contrib | 2026.9 | 构建钩子 GPL-2.0-or-later；运行时钩子 Apache-2.0 | [社区钩子](https://github.com/pyinstaller/pyinstaller-hooks-contrib) |
 | altgraph | 0.17.5 | MIT | [altgraph](https://github.com/ronaldoussoren/altgraph) |
 | pefile | 2024.8.26 | MIT | [pefile](https://github.com/erocarrera/pefile) |
 | pywin32-ctypes | 0.2.3 | BSD-3-Clause | [pywin32-ctypes](https://github.com/enthought/pywin32-ctypes) |
@@ -60,7 +60,7 @@ Google 是本版使用的远程服务，不是随软件分发的开源库；本�
 | Shapely / GEOS | 2.1.2 | BSD-3-Clause / LGPL-2.1；https://github.com/shapely/shapely |
 | tqdm | 4.70.1 | MPL-2.0 AND MIT；https://github.com/tqdm/tqdm |
 | FlatBuffers | 25.12.19 | Apache-2.0；https://github.com/google/flatbuffers |
-| Protobuf | 7.36.2 | BSD-3-Clause；https://github.com/protocolbuffers/protobuf |
+| Protobuf | 4.25.9 | BSD-3-Clause；https://github.com/protocolbuffers/protobuf |
 | coloredlogs / humanfriendly | 15.0.1 / 10.0 | MIT；https://github.com/xolox/python-coloredlogs |
 | colorama | 0.4.6 | BSD-3-Clause；https://github.com/tartley/colorama |
 
@@ -69,3 +69,22 @@ Google 是本版使用的远程服务，不是随软件分发的开源库；本�
 翻译模型来自 Argos 官方模型索引中的 `en_zh`、`zh_en` 1.9 包，衍生自 OPUS-MT，采用 **CC BY 4.0**。作者 Jörg Tiedemann 和 Santhosh Thottingal，作品 OPUS-MT — Building open translation services for the World，EAMT 2020。模型权重未修改；移除了未使用的 Stanza 分句模型，重新命名目录。来源、SHA-256、完整许可和原始署名 README 在 `models/`，详情见 `models/README.md`。不得以 Argos 索引项目的 MIT 许可替代模型自身的 CC BY 4.0。
 
 OCR 模型来自 RapidOCR 1.4.4 分发包：`ch_PP-OCRv4_det_infer.onnx`、`ch_PP-OCRv4_rec_infer.onnx`、`ch_ppocr_mobile_v2.0_cls_infer.onnx`，位于 `_internal/rapidocr_onnxruntime/models/`。上游许可分别保存为 `licenses/RapidOCR-LICENSE.txt` 与 `licenses/PaddleOCR-models-LICENSE.txt`。
+
+## 本地语音识别
+
+| 组件 | 版本 | 许可 / 上游 |
+| --- | --- | --- |
+| sherpa-onnx / sherpa-onnx-core | 1.12.40 | Apache-2.0；https://github.com/k2-fsa/sherpa-onnx |
+| sounddevice | 0.5.6 | MIT；https://github.com/spatialaudio/python-sounddevice |
+| PortAudio（sounddevice 附带动态库） | 19.7.0-devel | MIT 类许可；https://github.com/PortAudio/portaudio |
+| CFFI | 以 `licenses/voice-runtime-versions.json` 为准 | MIT；https://github.com/python-cffi/cffi |
+| pycparser | 以 `licenses/voice-runtime-versions.json` 为准 | BSD-3-Clause；https://github.com/eliben/pycparser |
+| sherpa-onnx-core 自带 ONNX Runtime CPU | 1.24.4 | MIT，附第三方声明；https://github.com/microsoft/onnxruntime |
+
+成品识别模型为 **SenseVoice-Small**，作者 / 来源 **Alibaba Group（阿里巴巴集团）**，项目 https://github.com/QwenAudio/SenseVoice ，官方模型卡 https://huggingface.co/FunAudioLLM/SenseVoiceSmall 。使用 k2-fsa/sherpa-onnx 发布的 `sherpa-onnx-sense-voice-zh-en-ja-ko-yue-int8-2024-07-17` 导出，应用不训练、不微调权重。模型名、来源、下载 URL、大小和 SHA-256 保存在 `models/asr/sensevoice/provenance.json`。
+
+**模型权重的许可与 sherpa-onnx 代码许可不同。** 官方模型卡标为 `other`，指向 **FunASR Model Open Source License Agreement v1.1**，其中包含署名、保留模型名称、参考与学习用途、行为及修订条款。完整文本保存在 `licenses/SenseVoice-FunASR-MODEL_LICENSE.txt`；导出包的原始 LICENSE 是指向 FunASR 仓库许可的链接，也保留在模型目录。不要用 sherpa-onnx 代码的 Apache-2.0 许可替代模型条款，也不要据此声称模型不受限制地可商用。
+
+语音识别不使用云端服务，不复制分发任何云端配音。录音由本机 PortAudio 采集，sherpa-onnx / SenseVoice 在 CPU 上识别；朗读仍使用电脑已有的 Windows 语音。组件及其附带动态库未修改，原始许可随软件保留。
+
+本次 x64 Windows 构建仅附带非 ASIO 的 `libportaudio64bit.dll`。PortAudio 完整许可、sherpa 自带 ONNX Runtime 1.24.4 许可及第三方声明，分别在 `licenses/PortAudio-v19.7.0-LICENSE.txt`、`licenses/onnxruntime-1.24.4-LICENSE.txt`、`licenses/onnxruntime-1.24.4-ThirdPartyNotices.txt`；版本与来源证据见 `licenses/runtime-license-provenance.json`。OCR 使用的 ONNX Runtime 1.23.2 保留在独立组件目录。旧版本许可作为历史声明保留，语音版新增与更新的实际分发包版本见 `licenses/voice-runtime-versions.json`。

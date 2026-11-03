@@ -21,6 +21,7 @@ from capture import ScreenshotCapture, self_test as ocr_self_test, picker_self_t
 from offline import self_test as offline_self_test
 from learning import LearningStore
 from learning_ui import LearningPage
+from dictation import DictationRecorder
 
 ROOT = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent))
 ASSETS = ROOT / "assets"
@@ -65,6 +66,10 @@ class TutuApp(ctk.CTk):
         self.learning_store = None
         self._learning_state_path = learning_state_path
         self.capture = ScreenshotCapture(self, self.events, ASSETS)
+        self.dictation = DictationRecorder(self.events)
+        self._dictation_id = None
+        self._dictation_input = None
+        self._dictation_state = None
         self._watch_id = None
         self._build()
         threading.Thread(target=self._worker, name="tutu-translate", daemon=True).start()
@@ -73,6 +78,7 @@ class TutuApp(ctk.CTk):
             self.bind(sequence, self._translate_key)
             self.source.bind(sequence, self._translate_key)
         self.bind("<Control-l>", lambda e: self.clear() if self._current_page == "translate" else None)
+        self.bind("<Control-r>", self._dictation_key)
         self.bind("<Escape>", lambda e: self.hide())
         self.after(120, self._start_native)
         self.after(100, self._poll)
@@ -215,16 +221,18 @@ class TutuApp(ctk.CTk):
 
         actions = ctk.CTkFrame(main, fg_color="transparent")
         actions.grid(row=5, column=0, sticky="ew", pady=(14, 0))
-        actions.grid_columnconfigure(2, weight=1)
-        self.paste_btn = self.button(actions, "粘贴文字", self.paste_translate, width=118)
+        actions.grid_columnconfigure(3, weight=1)
+        self.paste_btn = self.button(actions, "粘贴文字", self.paste_translate, width=94)
         self.paste_btn.grid(row=0, column=0, sticky="w")
-        self.capture_btn = self.button(actions, "截图翻译", self.capture_translate, primary=True, width=132)
-        self.capture_btn.grid(row=0, column=1, sticky="w", padx=12)
+        self.capture_btn = self.button(actions, "截图翻译", self.capture_translate, primary=True, width=100)
+        self.capture_btn.grid(row=0, column=1, sticky="w", padx=8)
+        self.dictation_btn = self.button(actions, "语音输入", self.toggle_dictation, width=100)
+        self.dictation_btn.grid(row=0, column=2, sticky="w")
         self.service_note = self.label(actions, "正在准备本地翻译…", size=11, color=MUTED)
-        self.service_note.grid(row=0, column=2, sticky="e")
+        self.service_note.grid(row=0, column=3, sticky="e", padx=(8, 0))
         self.status = self.label(main, "●  准备好啦，输入文字就能开始", size=12, color="#879B8D", anchor="w", wraplength=690)
         self.status.grid(row=6, column=0, sticky="ew", pady=(12, 0))
-        self.label(main, "输入停顿后联网翻译 · 连接不佳时本地接替 · 截图在本机识别", size=10, color="#B1A9BC").grid(row=7, column=0, sticky="w", pady=(5, 0))
+        self.label(main, "语音、截图在本机识别 · 文字联网翻译，连接不佳时本地接替", size=10, color="#B1A9BC").grid(row=7, column=0, sticky="w", pady=(5, 0))
 
     def _start_native(self):
         if self.native:
@@ -240,6 +248,7 @@ class TutuApp(ctk.CTk):
         if page not in ("translate", "learning") or self._closing:
             return
         if page != self._current_page:
+            self.cancel_dictation()
             self.stop_reading()
         if page == "learning":
             if self.learning_page is None:
@@ -265,6 +274,7 @@ class TutuApp(ctk.CTk):
                 text_color="white" if active else "#715A9F", hover_color="#7860B4" if active else "#E5DDF4")
 
     def read_learning(self, text, slow=False):
+        self.cancel_dictation()
         if self._speech_area == "learning":
             self.stop_reading()
             return
@@ -282,6 +292,85 @@ class TutuApp(ctk.CTk):
             self.translate()
         return "break"
 
+    def _dictation_key(self, _event):
+        if self._current_page == "translate":
+            self.toggle_dictation()
+        return "break"
+
+    def toggle_dictation(self):
+        if self._closing or self._current_page != "translate":
+            return
+        if self._dictation_id is not None:
+            if self._dictation_state in ("starting", "recording"):
+                self.dictation.stop()
+                self._dictation_state = "recognizing"
+                self.dictation_btn.configure(text="识别中…", state="disabled")
+                self._say("●  正在本机识别语音…", PURPLE)
+            return
+        if self.dictation.busy:
+            self._say("上一段语音仍在结束，请稍等再试。", "#B57B83")
+            return
+        self.stop_reading()
+        try:
+            identifier = self.dictation.start()
+        except Exception:
+            self._say("无法启动录音，请检查麦克风及系统权限。", "#B57B83")
+            return
+        if identifier is None:
+            self._say("语音输入暂时忙碌，请稍后再试。", "#B57B83")
+            return
+        self._dictation_id = identifier
+        self._dictation_input = self.text()
+        self._dictation_state = "starting"
+        self.dictation_btn.configure(text="结束录音", state="normal", fg_color="#E9CFE0")
+        self._say("●  正在打开麦克风 · Ctrl + R 结束录音", PURPLE)
+
+    def cancel_dictation(self):
+        if self._dictation_id is None:
+            return
+        self._dictation_id = None
+        self._dictation_input = None
+        self._dictation_state = None
+        self.dictation.cancel()
+        self.dictation_btn.configure(text="语音输入", state="normal", fg_color=LILAC)
+
+    def _dictation_event(self, payload):
+        if self._dictation_id is None or payload.get("id") != self._dictation_id:
+            return
+        state = payload.get("state")
+        if state in ("starting", "recording", "recognizing"):
+            # A queued recording event may arrive after the user already pressed stop.
+            if self._dictation_state == "recognizing" and state != "recognizing":
+                return
+            self._dictation_state = state
+            recognizing = state == "recognizing"
+            self.dictation_btn.configure(text="识别中…" if recognizing else "结束录音",
+                                         state="disabled" if recognizing else "normal")
+            self._say("●  正在本机识别语音…" if recognizing else
+                      "●  请说中文或英文 · 再点结束录音，最长 60 秒 · Ctrl + R", PURPLE)
+            return
+        if state not in ("result", "error", "cancelled"):
+            return
+        original = self._dictation_input
+        self._dictation_id = None
+        self._dictation_input = None
+        self._dictation_state = None
+        self.dictation_btn.configure(text="语音输入", state="normal", fg_color=LILAC)
+        if state == "result":
+            text = payload.get("text", "").strip()
+            if self.text() != original or self._current_page != "translate":
+                return
+            if text:
+                self._set_input(text)
+                self._say("●  语音已转成文字，稍后按现有设置翻译", "#879B8D")
+                self.source.focus_set()
+            else:
+                self._say("没有听清楚，请靠近麦克风再说一次。", "#B57B83")
+        elif state == "error":
+            self._say(payload.get("message") or "语音识别失败，请检查麦克风后重试。", "#B57B83")
+        else:
+            self._say("●  已取消语音输入", MUTED)
+
     def text(self):
         return self.source.get("1.0", "end-1c")
 
@@ -295,6 +384,7 @@ class TutuApp(ctk.CTk):
         current = self.text()
         if current == self._last_input:
             return
+        self.cancel_dictation()
         self._last_input = current
         self.count.configure(text=f"{len(current)} / 5000", text_color="#C37583" if len(current) > 5000 else "#B0A8BA")
         if current:
@@ -395,6 +485,7 @@ class TutuApp(ctk.CTk):
         self.read_word_btn.configure(state="disabled")
 
     def read_aloud(self, area):
+        self.cancel_dictation()
         if self._speech_area == area:
             self.stop_reading()
             return
@@ -458,6 +549,7 @@ class TutuApp(ctk.CTk):
                 self.learning_page.set_message(payload.get("message") or "英语朗读暂时不可用。", error=True)
 
     def clear(self):
+        self.cancel_dictation()
         self._pending = None
         self._set_input("")
         self._set_result("")
@@ -468,6 +560,7 @@ class TutuApp(ctk.CTk):
         self.source.focus_set()
 
     def paste_translate(self):
+        self.cancel_dictation()
         self.show_page("translate")
         self.show()
         try:
@@ -494,6 +587,7 @@ class TutuApp(ctk.CTk):
     def capture_translate(self):
         if self._closing:
             return
+        self.cancel_dictation()
         self.stop_reading()
         if self._debounce:
             self.after_cancel(self._debounce)
@@ -501,6 +595,7 @@ class TutuApp(ctk.CTk):
         self.capture.start()
 
     def _ocr_event(self, payload):
+        self.cancel_dictation()
         state = payload.get("state")
         if state == "working":
             self.capture_btn.configure(state="disabled", text="识别中…")
@@ -617,6 +712,8 @@ class TutuApp(ctk.CTk):
                     self.service_note.configure(text="联网优先 · 本地已就绪" if self._offline_ready else "本地模型未就绪")
                 elif kind == "speech":
                     self._speech_event(payload)
+                elif kind == "dictation":
+                    self._dictation_event(payload)
                 elif kind == "quit":
                     self.quit_app()
                     return
@@ -636,6 +733,7 @@ class TutuApp(ctk.CTk):
             self.learning_page.refresh()
 
     def hide(self):
+        self.cancel_dictation()
         if self.native_status.get("tray"):
             self.withdraw()
         elif self.native is None:
@@ -647,6 +745,7 @@ class TutuApp(ctk.CTk):
         if self._closing:
             return
         self._closing = True
+        self.dictation.close()
         self.jobs.put(None)
         self.reader.close()
         self.capture.close()
@@ -758,9 +857,87 @@ class TutuApp(ctk.CTk):
             self.quit_app()
 
 
+def dictation_ui_self_test(report_path):
+    """Exercise real widgets with fake services; never open the microphone."""
+    import json
+    from unittest.mock import Mock, patch
+
+    report_path = Path(report_path)
+    report_path.parent.mkdir(parents=True, exist_ok=True)
+    recorder = Mock(recording=False, busy=False)
+    recorder.start.side_effect = (1, 2)
+    engine = Mock()
+    engine.warmup.return_value = {"available": True}
+    engine.translate.side_effect = AssertionError("UI diagnostic must not translate")
+    services = (("Translator", engine), ("SpeechReader", Mock()),
+                ("ScreenshotCapture", Mock()), ("DictationRecorder", recorder))
+    from contextlib import ExitStack
+    with ExitStack() as stack:
+        module = sys.modules[__name__]
+        for name, service in services:
+            stack.enter_context(patch.object(module, name, return_value=service))
+        ctk.set_appearance_mode("light")
+        app = TutuApp(native=False)
+        app.geometry("900x680")
+        app.attributes("-topmost", True)
+        app.lift()
+        report = {"ok": False, "fake_audio": True, "network_used": False}
+
+        def cancel_debounce():
+            if app._debounce:
+                app.after_cancel(app._debounce)
+                app._debounce = None
+
+        def exercise():
+            try:
+                app._set_input("Original text stays until speech is recognized.")
+                cancel_debounce()
+                app.toggle_dictation()
+                app._dictation_event({"id": 1, "state": "recording"})
+                report["recording_button"] = app.dictation_btn.cget("text") == "结束录音"
+                app.toggle_dictation()
+                report["stop_called"] = recorder.stop.call_count == 1
+                app._dictation_event({"id": 1, "state": "result", "text": "Good morning! How are you today?"})
+                report["text_inserted"] = app.text() == "Good morning! How are you today?"
+                report["translation_scheduled"] = app._debounce is not None
+                cancel_debounce()
+                app.toggle_dictation()
+                app._set_input("An edit must survive a late recognition result.")
+                cancel_debounce()
+                app._dictation_event({"id": 2, "state": "result", "text": "Stale result"})
+                report["edit_preserved"] = app.text() == "An edit must survive a late recognition result."
+                app._set_input("Good morning! How are you today?")
+                cancel_debounce()
+                app._set_result("早上好！你今天怎么样？")
+                app.result_meta.configure(text="语音输入界面演示 · 译文为预设示例")
+                app._say("●  语音在本机识别 · 点击语音输入，或按 Ctrl + R", "#879B8D")
+                app.update_idletasks()
+                controls = (app.paste_btn, app.capture_btn, app.dictation_btn, app.service_note,
+                            app.read_source_btn, app.read_result_btn, app.status)
+                report["dimensions"] = [app.winfo_width(), app.winfo_height()]
+                report["controls_fit"] = all(w.winfo_ismapped() and w.winfo_rootx() >= app.winfo_rootx()
+                    and w.winfo_rootx() + w.winfo_width() <= app.winfo_rootx() + app.winfo_width()
+                    and w.winfo_rooty() + w.winfo_height() <= app.winfo_rooty() + app.winfo_height()
+                    for w in controls)
+                left, top = app.winfo_rootx(), app.winfo_rooty()
+                ImageGrab.grab(bbox=(left, top, left + app.winfo_width(), top + app.winfo_height())).save(report_path.with_suffix(".png"))
+                report["ok"] = all(report.get(key) for key in ("recording_button", "stop_called", "text_inserted",
+                    "translation_scheduled", "edit_preserved", "controls_fit"))
+            except Exception as exc:
+                report["error"] = str(exc)
+            finally:
+                report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+                app.after(100, app.quit_app)
+
+        app.after(400, exercise)
+        app.mainloop()
+    return report
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--learn", action="store_true", help="Open the English learning page")
+    parser.add_argument("--dictation-audio-dir", metavar="DIRECTORY")
     smoke_group = parser.add_mutually_exclusive_group()
     smoke_group.add_argument("--smoke-test", metavar="REPORT")
     smoke_group.add_argument("--native-smoke-test", metavar="REPORT")
@@ -770,7 +947,16 @@ def main():
     smoke_group.add_argument("--offline-self-test", metavar="REPORT")
     smoke_group.add_argument("--combined-self-test", metavar="REPORT")
     smoke_group.add_argument("--learning-self-test", metavar="REPORT")
+    smoke_group.add_argument("--dictation-ui-smoke", metavar="REPORT")
+    smoke_group.add_argument("--dictation-self-test", metavar="REPORT")
     args = parser.parse_args()
+    if args.dictation_ui_smoke:
+        return 0 if dictation_ui_self_test(args.dictation_ui_smoke).get("ok") else 1
+    if args.dictation_self_test:
+        if not args.dictation_audio_dir:
+            parser.error("--dictation-self-test requires --dictation-audio-dir")
+        from dictation import self_test as dictation_self_test
+        return dictation_self_test(args.dictation_audio_dir, args.dictation_self_test)
     if args.speech_self_test:
         report = speech_self_test(ASSETS, args.speech_self_test)
         return 0 if report.get("ok") else 1
@@ -791,6 +977,14 @@ def main():
             report["ocr"] = ocr_self_test(ASSETS)
             report["speech"] = speech_self_test(ASSETS, None)
             report["ok"] = bool(report["translation"].get("passed") and report["ocr"].get("ok") and report["speech"].get("ok"))
+            if args.dictation_audio_dir:
+                import tempfile
+                from dictation import self_test as dictation_self_test
+                with tempfile.TemporaryDirectory(prefix="tutu-voice-check-") as temporary:
+                    voice_report = Path(temporary) / "voice.json"
+                    voice_ok = dictation_self_test(args.dictation_audio_dir, voice_report) == 0
+                    report["dictation"] = json.loads(voice_report.read_text(encoding="utf-8"))
+                    report["ok"] = report["ok"] and voice_ok
         except Exception as exc:
             report.update(ok=False, error=str(exc))
         Path(args.combined_self_test).write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")

@@ -12,3 +12,5 @@ opencv-python-headless==4.10.0.84
 pyclipper==1.4.0
 shapely==2.1.2
 tqdm==4.70.1
+sherpa-onnx==1.12.40
+sounddevice==0.5.6

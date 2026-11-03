@@ -112,11 +112,22 @@ class AppTests(UIHarness, unittest.TestCase):
 
     def test_typing_is_debounced_without_needing_a_button(self):
         self.controlled_run()
-        self.app._set_input("Rabbit")
+        with patch.object(self.app, "after", wraps=self.app.after) as scheduling:
+            self.app._set_input("Rabbit")
         self.assertIsNotNone(self.app._debounce)
-        self.pump(.20)
+        self.assertIn(self.app._debounce, self.app.tk.call("after", "info"))
         self.assertEqual(self.runs, [])
-        self.pump(.45)
+        scheduled = [call for call in scheduling.call_args_list
+                     if len(call.args) > 1 and call.args[1] == self.app.translate]
+        self.assertEqual(len(scheduled), 1)
+        delay, callback = scheduled[0].args
+        self.assertGreaterEqual(delay, 400)
+        self.assertLessEqual(delay, 700)
+        # Fire the captured timer deliberately; a busy Tk redraw can otherwise
+        # exceed the debounce interval while a short wall-clock pump is running.
+        self.app.after_cancel(self.app._debounce)
+        self.app._debounce = None
+        callback()
         self.assertEqual(self.runs, [("Rabbit", "auto")])
         self.assertIsNone(self.app._debounce)
 

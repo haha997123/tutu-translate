@@ -1,0 +1,92 @@
+[
+  {
+    "name": "sherpa-onnx",
+    "version": "1.12.40",
+    "license": "Apache licensed, as found in the LICENSE file",
+    "files": [
+      "licenses/sherpa-onnx/sherpa_onnx-1.12.40.dist-info__LICENSE"
+    ]
+  },
+  {
+    "name": "sherpa-onnx-core",
+    "version": "1.12.40",
+    "license": "Apache-2.0",
+    "files": []
+  },
+  {
+    "name": "sounddevice",
+    "version": "0.5.6",
+    "license": "MIT",
+    "files": [
+      "licenses/sounddevice/sounddevice-0.5.6.dist-info__licenses__LICENSE"
+    ]
+  },
+  {
+    "name": "cffi",
+    "version": "2.0.0",
+    "license": "MIT",
+    "files": [
+      "licenses/cffi/cffi-2.0.0.dist-info__licenses__AUTHORS",
+      "licenses/cffi/cffi-2.0.0.dist-info__licenses__LICENSE"
+    ]
+  },
+  {
+    "name": "pycparser",
+    "version": "3.0",
+    "license": "BSD-3-Clause",
+    "files": [
+      "licenses/pycparser/pycparser-3.0.dist-info__licenses__LICENSE"
+    ]
+  },
+  {
+    "name": "packaging",
+    "version": "26.2",
+    "files": [
+      "licenses/packaging/packaging-26.2.dist-info__licenses__LICENSE",
+      "licenses/packaging/packaging-26.2.dist-info__licenses__LICENSE.APACHE",
+      "licenses/packaging/packaging-26.2.dist-info__licenses__LICENSE.BSD"
+    ]
+  },
+  {
+    "name": "charset-normalizer",
+    "version": "3.4.7",
+    "files": [
+      "licenses/charset-normalizer/charset_normalizer-3.4.7.dist-info__licenses__LICENSE"
+    ]
+  },
+  {
+    "name": "idna",
+    "version": "3.18",
+    "files": [
+      "licenses/idna/idna-3.18.dist-info__licenses__LICENSE.md"
+    ]
+  },
+  {
+    "name": "urllib3",
+    "version": "2.7.0",
+    "files": [
+      "licenses/urllib3/urllib3-2.7.0.dist-info__licenses__LICENSE.txt"
+    ]
+  },
+  {
+    "name": "certifi",
+    "version": "2026.6.17",
+    "files": [
+      "licenses/certifi/certifi-2026.6.17.dist-info__licenses__LICENSE"
+    ]
+  },
+  {
+    "name": "protobuf",
+    "version": "4.25.9",
+    "files": [
+      "licenses/protobuf/protobuf-4.25.9.dist-info__LICENSE"
+    ]
+  },
+  {
+    "name": "pyinstaller-hooks-contrib",
+    "version": "2026.9",
+    "files": [
+      "licenses/pyinstaller-hooks-contrib/pyinstaller_hooks_contrib-2026.9.dist-info__licenses__LICENSE"
+    ]
+  }
+]

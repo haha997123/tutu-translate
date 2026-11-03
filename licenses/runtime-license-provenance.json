@@ -1,0 +1,47 @@
+{
+  "retrieved_on": "2026-11-03",
+  "portaudio": {
+    "version": "19.7.0",
+    "runtime_version_string": "PortAudio V19.7.0-devel, revision unknown",
+    "binding": "sounddevice 0.5.6",
+    "evidence": "Installed wheel's portaudio-binaries/.github/workflows/build-libs.yml pins PortAudio/portaudio ref v19.7.0; get_portaudio_version() confirms V19.7.0-devel.",
+    "upstream": "https://github.com/PortAudio/portaudio/tree/v19.7.0",
+    "binary_source": "https://github.com/spatialaudio/portaudio-binaries",
+    "license_url": "https://raw.githubusercontent.com/PortAudio/portaudio/v19.7.0/LICENSE.txt",
+    "license": {
+      "file": "PortAudio-v19.7.0-LICENSE.txt",
+      "bytes": 3524,
+      "sha256": "ec52a1952d701f94e5135719a47376da4ee0b4a0201f1cafb49f61db6480ac3d"
+    },
+    "binary": {
+      "file": "libportaudio64bit.dll",
+      "bytes": 307712,
+      "sha256": "ec080194f01e4095c7fb43dbd7ed05af922c5b34295056a9ff56782741d65481"
+    },
+    "note": "This records the default non-ASIO x64 DLL. ASIO, x86, ARM64, and macOS variants are not needed for this Windows x64 application."
+  },
+  "onnxruntime_bundled_with_sherpa": {
+    "version": "1.24.4",
+    "binding": "sherpa-onnx-core 1.12.40",
+    "evidence": "Bundled onnxruntime.dll PE FileVersion/ProductVersion and OrtGetApiBase().GetVersionString() both return 1.24.4.",
+    "upstream": "https://github.com/microsoft/onnxruntime/tree/v1.24.4",
+    "license_url": "https://raw.githubusercontent.com/microsoft/onnxruntime/v1.24.4/LICENSE",
+    "notices_url": "https://raw.githubusercontent.com/microsoft/onnxruntime/v1.24.4/ThirdPartyNotices.txt",
+    "notice_git_blob_sha": "fbd9f9a95f6013d8ecaef81e02b0033e5882a675",
+    "license": {
+      "file": "onnxruntime-1.24.4-LICENSE.txt",
+      "bytes": 1073,
+      "sha256": "2f07c72751aed99790b8a4869cf2311df85a860b22ded05fa22803587a48922c"
+    },
+    "third_party_notices": {
+      "file": "onnxruntime-1.24.4-ThirdPartyNotices.txt",
+      "bytes": 325054,
+      "sha256": "0e07b95f3a8d6230037707c5c4a2b554d12c4cb67369669ac255635528ffcee2"
+    },
+    "binary": {
+      "file": "onnxruntime.dll",
+      "bytes": 16036864,
+      "sha256": "756c938b0f2d14c45c7ad469c6429041d7e905ee6c6ad6049aa67ce937567e97"
+    }
+  }
+}

@@ -1,6 +1,6 @@
 # 兔兔翻译 · Tutu Translate
 
-Windows 中英快捷翻译工具，带小兔界面、输入即译、截图翻译、联网优先 / 本地兜底、朗读、参考音标和每日英语学习。
+Windows 中英快捷翻译工具，带小兔界面、输入即译、本地语音转文字、截图翻译、联网优先 / 本地兜底、朗读、参考音标和每日英语学习。
 
 <img src="assets/mascot.png" alt="兔兔翻译的小兔" width="150">
 
@@ -15,6 +15,7 @@ Windows 中英快捷翻译工具，带小兔界面、输入即译、截图翻译
 | Alt + Q | 呼出窗口 |
 | Alt + W | 粘贴并翻译当前剪贴板文字 |
 | Alt + E | 框选截图翻译 |
+| Ctrl + R | 语音输入 / 结束录音（翻译页内） |
 | Ctrl + Enter | 立即处理当前输入 |
 | Ctrl + L | 清空 |
 | Esc / 关闭窗口 | 收到托盘；截图时 Esc 取消框选 |
@@ -22,6 +23,16 @@ Windows 中英快捷翻译工具，带小兔界面、输入即译、截图翻译
 点击“截图翻译”或按 Alt+E，屏幕轻微变暗后拖动框选中英文字；紫色边框内保留原亮度，松开鼠标后在本机识别并翻译。按 Esc 或右键可取消框选。截图不写文件、不上传；识别出的文字会填入原文框。识别结果可能有误，可直接改字。支持多屏和位于主屏左侧的屏幕。复杂表格、竖排、小字及多栏阅读顺序可能不准确。
 
 “保持在最前”开启后，窗口会显示在其他普通窗口上方。右键系统托盘小兔图标选择“退出”，完全关闭程序。快捷键被其他软件占用时会显示提示，仍可使用界面和托盘菜单。
+
+## 语音输入
+
+点击“语音输入”开始说中文或英文，再点“结束录音”，在本机转成文字后填入原文框，沿用输入即译。也可在翻译页按 Ctrl+R 开始 / 结束。一次最多 60 秒；首次识别会加载模型，耗时取决于电脑。它是录完后识别，不是边说边出字。录音前会停止软件朗读，避免把自己的声音录进去。
+
+识别使用阿里巴巴的成品 **SenseVoice-Small**，通过 **sherpa-onnx** 的固定 INT8 ONNX 导出在 CPU 上运行，没有训练自制语音模型。语音模型权重约 228 MiB，录音与识别均无需联网、显卡或云端账号。模型会听错字词，噪声、口音、远距离说话及专有名词会影响效果，可在输入框修改。缺少设备或权限时，会显示错误；可到 Windows“设置 → 隐私和安全性 → 麦克风”允许桌面应用访问。
+
+Windows 原生词表读取按系统文件编码处理，已验证本机中文目录可用。若其他电脑提示目录字符不受支持，可将整个软件文件夹移到 `D:\TutuTranslate` 等英文路径。
+
+原文在成功识别前保留。录音 / 识别期间编辑、清空、粘贴、截图、切换学习页、隐藏或退出窗口会取消本次语音输入，迟到的结果不会覆盖文字。仅在点按钮或按快捷键后打开麦克风，录音只保存在内存，不写音频文件，也不上传音频。**识别出来的文字会按现有策略自动发送给 Google 翻译**；断网时由本地翻译接替。
 
 ## 每日英语学习
 
@@ -51,7 +62,7 @@ Google 接口无需本工具 API Key，但不是受支持的 Google Cloud Transl
 
 ## 隐私
 
-输入停顿、粘贴翻译或截图识别完成后，原文默认可能发送至 Google。截图图像只在内存中、本机处理；识别文字按相同翻译策略提交。朗读、音标、本地模型都在本机执行。没有翻译历史、截图文件或内容日志；内存缓存最多 256 条，30 分钟过期，退出后清除。软件不会持续读取剪贴板或捕获屏幕。
+输入停顿、粘贴翻译、截图或语音识别完成后，原文默认可能发送至 Google。截图图像、麦克风音频只在内存中、本机处理；识别文字按相同翻译策略提交。朗读、音标、本地模型都在本机执行。没有翻译历史、截图 / 录音文件或内容日志；内存缓存最多 256 条，30 分钟过期，退出后清除。软件不会持续读取剪贴板、捕获屏幕或监听麦克风。
 
 ## 搬到其他电脑
 
@@ -69,6 +80,8 @@ python -m venv .venv
 .\.venv\Scripts\python.exe -m pip install --no-deps rapidocr-onnxruntime==1.4.4
 .\.venv\Scripts\python.exe scripts/setup_models.py --download
 .\.venv\Scripts\python.exe scripts/setup_models.py --verify
+.\.venv\Scripts\python.exe scripts/setup_voice_model.py --download
+.\.venv\Scripts\python.exe scripts/setup_voice_model.py --verify
 .\.venv\Scripts\python.exe app.py
 .\.venv\Scripts\python.exe -m unittest discover -s tests -v
 ```
@@ -76,6 +89,10 @@ python -m venv .venv
 `--download` 仅在明确执行时联网下载两个固定版本的 Argos 官方模型包，并校验来源记录中的 SHA-256；只安装运行所需文件。已有完整便携版时也可用 `python scripts/setup_models.py --from-install "你的软件目录"` 从本机复制并校验。源码仓库不重复保存约 162 MiB 的模型权重，程序启动时不会自动下载它们。模型服务器暂不可用时可以稍后重试，或从本机完整安装复制。
 
 OCR 权重随 `rapidocr-onnxruntime` 分发包安装，构建时一并收集。朗读依赖 Windows 自带的语音组件。
+
+`scripts/setup_voice_model.py --download` 明确下载固定的官方 sherpa-onnx SenseVoice 导出包，校验压缩包和安装文件的 SHA-256；也支持 `--archive 包路径` 或 `--from-install 完整软件目录`。只安装 INT8 模型、词表和原始许可，保留仓库中的模型来源与许可说明。语音权重不提交 GitHub，普通启动不会下载模型。模型清单在 `models/asr/sensevoice/provenance.json`。
+
+使用官方导出包中的 `test_wavs` 可运行 `python app.py --dictation-self-test 报告.json --dictation-audio-dir 官方包/test_wavs`，验证真实本地引擎及中英文样例；不会打开麦克风。`--dictation-ui-smoke 报告.json` 仅用假服务检查界面和输入保护，不代表识别准确率。
 
 在上述虚拟环境中运行 `build.ps1`，会检查模型及分词器、打包程序，并把模型放到 EXE 同级目录。可用 `--combined-self-test 报告.json` 执行真实离线翻译、合成图片 OCR 和无声系统朗读检查；不捕获真实屏幕。
 
