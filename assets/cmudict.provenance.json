@@ -1,0 +1,12 @@
+{
+  "name": "CMU Pronouncing Dictionary",
+  "upstream": "https://github.com/cmusphinx/cmudict",
+  "commit": "74790861f652b15e4ac49015a90074ad62a27690",
+  "source": "https://raw.githubusercontent.com/cmusphinx/cmudict/74790861f652b15e4ac49015a90074ad62a27690/cmudict.dict",
+  "downloaded": "2026-10-12",
+  "source_sha256": "81917843c7f44ce2b094ac63873c2c7a4cf802040792c455ba3ca406891c3d22",
+  "compressed_sha256": "5f247ae70ca59c7e6a435c71dbfd5b7035ad1fce273e1a64556b830d22897a13",
+  "format": "Upstream ARPABET data, gzip compressed without content changes",
+  "license": "BSD-style Carnegie Mellon license; full text in cmudict.LICENSE",
+  "transcription": "Tutu phonetics.py converts ARPABET to broad American IPA; CMU lexical stress retained, maximum-onset stress placement approximate; no whole-sentence IPA or contextual heteronym disambiguation."
+}

@@ -1,0 +1,47 @@
+# Python and local environments
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Build output and packaged runtimes
+build/
+dist/
+_internal/
+*.spec
+*.exe
+*.dll
+*.pyd
+
+# Obtain models explicitly with scripts/setup_models.py.
+models/**/model.bin
+models/**/sentencepiece.model
+*.argosmodel
+*.onnx
+*.gguf
+*.part
+
+# Credentials, personal state and generated reports
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+learning.json
+learning.json.*
+learning-state*.json
+*self-test*.json
+*selftest*.json
+*.log
+reports/
+outputs/
+
+# Editor and OS state
+.idea/
+.vscode/
+Thumbs.db
+Desktop.ini
+*.zip
