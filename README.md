@@ -4,7 +4,13 @@ Windows 中英快捷翻译工具，带小兔界面、输入即译、本地语音
 
 <img src="assets/mascot.png" alt="兔兔翻译的小兔" width="150">
 
-这里是源码仓库，面向 64 位 Windows 10/11，不是解压即用的便携程序。仓库保留代码、资源、测试和第三方许可；离线翻译权重及 Python 运行库需要按下文准备。它主要用于日常中英交流和英语学习，未针对专业论文翻译设计。
+## 下载即用
+
+普通用户请到 **[Releases 下载完整便携版](https://github.com/haha997123/tutu-translate/releases/latest)**，在 Assets 中选择 `TutuTranslate-1.0.0-Windows-x64.zip`，完整解压后双击 `TutuTranslate/兔兔翻译.exe`。适用于 64 位 Windows 10/11，无需安装 Python、申请 API Key 或另外下载模型。请保留同目录的 `_internal`、`models` 和 `licenses`，不要把 EXE 单独拿出来。`SHA256SUMS.txt` 提供下载包校验值。
+
+便携包已附带中英离线翻译、OCR 与 SenseVoice-Small 语音识别模型，断网可用。**默认有网时会尝试 Google 翻译，失败后转本地；语音与截图图像始终在本机识别，转出的文字仍沿用该翻译策略。** 系统朗读依赖电脑已有的中英文语音。
+
+GitHub 自动提供的 `Source code (zip/tar.gz)` 是源码，运行库和模型权重需要按下文准备。仓库保留代码、资源、测试和第三方许可。本工具主要用于日常中英交流和英语学习，未针对专业论文翻译设计。
 
 ## 使用
 
