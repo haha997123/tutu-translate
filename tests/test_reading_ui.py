@@ -174,7 +174,7 @@ class ReadingUITests(UIHarness, unittest.TestCase):
         width, height = self.app.winfo_width(), self.app.winfo_height()
         controls = [self.app.read_source_btn, self.app.read_result_btn,
                     self.app.read_word_btn, self.app.phonetic_label,
-                    self.app.paste_btn, self.app.capture_btn,
+                    self.app.dictation_btn, self.app.capture_btn,
                     self.app.service_note, self.app.status]
         for widget in controls:
             with self.subTest(widget=str(widget)):

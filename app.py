@@ -22,6 +22,7 @@ from offline import self_test as offline_self_test
 from learning import LearningStore
 from learning_ui import LearningPage
 from dictation import DictationRecorder
+from editor_menu import EditorContextMenu
 
 ROOT = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent))
 ASSETS = ROOT / "assets"
@@ -197,6 +198,12 @@ class TutuApp(ctk.CTk):
         self.label(self.empty, "小兔已经准备好了", size=11, color="#B4A7C2").pack()
         self.result_meta = self.label(self.output_card, "等待一段新的小对话", size=11, color="#A599B7")
         self.result_meta.grid(row=2, column=0, sticky="w", padx=19, pady=(8, 14))
+        self.source_menu = EditorContextMenu(self, self.source._textbox, editable=True, on_change=self._modified)
+        self.source_menu.bind(self.placeholder)
+        self.result_menu = EditorContextMenu(self, self.result._textbox)
+        self.result_menu.bind(self.empty)
+        for label in self.empty.winfo_children():
+            self.result_menu.bind(label)
 
         pronunciation = ctk.CTkFrame(main, fg_color="#F0EBF7", corner_radius=14)
         pronunciation.grid(row=4, column=0, sticky="ew", pady=(12, 0))
@@ -221,15 +228,13 @@ class TutuApp(ctk.CTk):
 
         actions = ctk.CTkFrame(main, fg_color="transparent")
         actions.grid(row=5, column=0, sticky="ew", pady=(14, 0))
-        actions.grid_columnconfigure(3, weight=1)
-        self.paste_btn = self.button(actions, "粘贴文字", self.paste_translate, width=94)
-        self.paste_btn.grid(row=0, column=0, sticky="w")
+        actions.grid_columnconfigure(2, weight=1)
         self.capture_btn = self.button(actions, "截图翻译", self.capture_translate, primary=True, width=100)
-        self.capture_btn.grid(row=0, column=1, sticky="w", padx=8)
+        self.capture_btn.grid(row=0, column=0, sticky="w")
         self.dictation_btn = self.button(actions, "语音输入", self.toggle_dictation, width=100)
-        self.dictation_btn.grid(row=0, column=2, sticky="w")
+        self.dictation_btn.grid(row=0, column=1, sticky="w", padx=(8, 0))
         self.service_note = self.label(actions, "正在准备本地翻译…", size=11, color=MUTED)
-        self.service_note.grid(row=0, column=3, sticky="e", padx=(8, 0))
+        self.service_note.grid(row=0, column=2, sticky="e", padx=(8, 0))
         self.status = self.label(main, "●  准备好啦，输入文字就能开始", size=12, color="#879B8D", anchor="w", wraplength=690)
         self.status.grid(row=6, column=0, sticky="ew", pady=(12, 0))
         self.label(main, "语音、截图在本机识别 · 文字联网翻译，连接不佳时本地接替", size=10, color="#B1A9BC").grid(row=7, column=0, sticky="w", pady=(5, 0))
@@ -857,7 +862,7 @@ class TutuApp(ctk.CTk):
             self.quit_app()
 
 
-def dictation_ui_self_test(report_path):
+def dictation_ui_self_test(report_path, *, menu_preview=False):
     """Exercise real widgets with fake services; never open the microphone."""
     import json
     from unittest.mock import Mock, patch
@@ -912,17 +917,54 @@ def dictation_ui_self_test(report_path):
                 app.result_meta.configure(text="语音输入界面演示 · 译文为预设示例")
                 app._say("●  语音在本机识别 · 点击语音输入，或按 Ctrl + R", "#879B8D")
                 app.update_idletasks()
-                controls = (app.paste_btn, app.capture_btn, app.dictation_btn, app.service_note,
+                controls = (app.capture_btn, app.dictation_btn, app.service_note,
                             app.read_source_btn, app.read_result_btn, app.status)
                 report["dimensions"] = [app.winfo_width(), app.winfo_height()]
                 report["controls_fit"] = all(w.winfo_ismapped() and w.winfo_rootx() >= app.winfo_rootx()
                     and w.winfo_rootx() + w.winfo_width() <= app.winfo_rootx() + app.winfo_width()
                     and w.winfo_rooty() + w.winfo_height() <= app.winfo_rooty() + app.winfo_height()
                     for w in controls)
+                if menu_preview:
+                    from types import SimpleNamespace
+                    editor = app.source._textbox
+                    editor.tag_add("sel", "1.0", "1.4")
+                    editor.mark_set("insert", "end-1c")
+                    with patch.object(editor, "clipboard_get", return_value="Hello"):
+                        event = SimpleNamespace(x_root=editor.winfo_rootx() + 70,
+                                                y_root=editor.winfo_rooty() + 66)
+                        app.source_menu.show(event)
+                        app.update()
+                        app.source_menu.invoke("paste")
+                        report["menu_paste"] = app.text() == "Hello morning! How are you today?"
+                        report["menu_paste_scheduled"] = app._debounce is not None
+                        cancel_debounce()
+                        app._set_input("Good morning! How are you today?")
+                        cancel_debounce()
+                        editor.tag_add("sel", "1.0", "1.12")
+                        app.source_menu.show(event)
+                        app.update()
+                        app.source_menu.hover("paste")
+                        import time
+                        for _ in range(6):
+                            app.update()
+                            time.sleep(.02)
+                        report["menu_visible"] = bool(app.source_menu.popup and app.source_menu.popup.winfo_ismapped())
+                        report["menu_has_no_grab"] = app.grab_current() is None
+                        report["selection_preserved"] = bool(editor.tag_ranges("sel"))
+                        if app.source_menu.popup:
+                            p = app.source_menu.popup
+                            report["menu_geometry"] = [p.winfo_rootx(), p.winfo_rooty(), p.winfo_width(), p.winfo_height()]
                 left, top = app.winfo_rootx(), app.winfo_rooty()
-                ImageGrab.grab(bbox=(left, top, left + app.winfo_width(), top + app.winfo_height())).save(report_path.with_suffix(".png"))
+                ImageGrab.grab(bbox=(left, top, left + app.winfo_width(), top + app.winfo_height()),
+                               include_layered_windows=menu_preview).save(report_path.with_suffix(".png"))
                 report["ok"] = all(report.get(key) for key in ("recording_button", "stop_called", "text_inserted",
                     "translation_scheduled", "edit_preserved", "controls_fit"))
+                if menu_preview:
+                    app.source_menu.close()
+                    report["menu_closed"] = app.source_menu.popup is None
+                    report["ok"] = report["ok"] and all(report.get(key) for key in (
+                        "menu_paste", "menu_paste_scheduled", "menu_visible", "menu_has_no_grab",
+                        "selection_preserved", "menu_closed"))
             except Exception as exc:
                 report["error"] = str(exc)
             finally:
@@ -948,8 +990,11 @@ def main():
     smoke_group.add_argument("--combined-self-test", metavar="REPORT")
     smoke_group.add_argument("--learning-self-test", metavar="REPORT")
     smoke_group.add_argument("--dictation-ui-smoke", metavar="REPORT")
+    smoke_group.add_argument("--editor-menu-smoke", metavar="REPORT")
     smoke_group.add_argument("--dictation-self-test", metavar="REPORT")
     args = parser.parse_args()
+    if args.editor_menu_smoke:
+        return 0 if dictation_ui_self_test(args.editor_menu_smoke, menu_preview=True).get("ok") else 1
     if args.dictation_ui_smoke:
         return 0 if dictation_ui_self_test(args.dictation_ui_smoke).get("ok") else 1
     if args.dictation_self_test:
